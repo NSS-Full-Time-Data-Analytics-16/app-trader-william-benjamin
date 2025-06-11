@@ -20,13 +20,16 @@ WITH combined_apps AS (
 		  COALESCE(app_store_apps.price, 0) AS apple_price,
           COALESCE(play_store_apps.price::money::numeric, 0) AS google_price,
 		  app_store_apps.rating AS apple_rating,
-		  play_store_apps.rating AS google_rating
+		  play_store_apps.rating AS google_rating,
+		  primary_genre AS apple_genre, genres AS google_genre,
+		  category AS google_category
 		FROM   app_store_apps
   INNER JOIN   play_store_apps
          USING(name)  
 ),
      prices AS (
-          SELECT name, apple_price, google_price
+          SELECT name, apple_price, google_price,
+		         apple_genre, google_genre, google_category
 		  FROM   combined_apps
 ),
      higher_prices AS (
@@ -63,9 +66,11 @@ WITH combined_apps AS (
 	   FROM   ratings_and_prices
 )
 SELECT   DISTINCT name, (longevity_months * 9000 - aquire_cost::numeric)::money 
-         AS net_income, aquire_cost, rounded_rating, longevity_months 
+         AS net_income, --aquire_cost, rounded_rating, longevity_months::integer,
+		 apple_genre, google_genre, google_category
 FROM     final_cte
-ORDER BY net_income DESC
+ORDER BY net_income DESC, name
+-- LIMIT 110
 --ORDER BY rounded_ratings DESC,aquire_cost ASC
 --SELECT   *
 --FROM     aquire_prices
